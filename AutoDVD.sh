@@ -6,6 +6,7 @@ titleMinlength=300        # 300 seconds = 5 minutes
 
 prefix="[\e[36mAutoDVD\e[0m] "
 workingPath="/home/$(whoami)/.AutoDVD"
+packages=("coreutils" "makemkv-bin" "makemkv-oss" "util-linux")
 
 if readlink /proc/$$/exe | grep -q "dash"; then
 	echo -e "${prefix}Please run this script with bash."
@@ -93,22 +94,19 @@ function checkRoot ()
   ln "Sudo check completed."
 }
 
-function hasCommand ()
+function checkRequiredPackages ()
 {
-  return command -v ${1} &> /dev/null
-}
-
-function checkRequiredCommmands ()
-{
-  if hasCommand "makemkvcon" && hasCommand "lsblk" && hasCommand "mkdir"; then
-    return 1
-  fi
-  return 0
+  for index in "${packages[@]}"; do
+    $(dpkg -s ${index} &> /dev/null) || echo "missing"
+  done
 }
 
 function checkPackages ()
 {
-  if ! checkRequiredCommmands; then
+  if [[ ! -n $(checkRequiredPackages) ]]; then
+    ln "All dependencies are installed."
+  else
+    br
     ln "Some dependencies need to be installed."
 
     ln "Adding repositories..."
@@ -116,15 +114,15 @@ function checkPackages ()
     sudo apt-get update &> /dev/null
 
     ln "Installing packages..."
-    sudo apt-get install -y makemkv-bin makemkv-oss util-linux coreutils &> /dev/null
+    sudo apt-get install -y ${packages[@]} &> /dev/null
 
     ln "Checking installation..."
-    if ! checkRequiredCommands; then
+    if [[ ! -n $(checkRequiredPackages) ]]; then
+      ln "Installation succeeded!"
+      br
+    else
       error "Installation failed."
     fi
-    ln "Installation succeeded!"
-  else
-    ln "All dependencies are installed."
   fi
 }
 
@@ -259,7 +257,7 @@ function performDiskAutodetect ()
   br
   ln "Please insert a new disk."
   while [[ ! -n ${mountedPath} ]]; do
-    mountedPath=$(mount | grep $drivePath | cut -d" " -f3)
+    mountedPath=$(mount | grep ${drivePath} | cut -d" " -f3)
     printf "."
     sleep 1s
   done
@@ -272,7 +270,7 @@ function performWaitForDisk ()
   while [[ ! -n ${mountedPath} ]]; do
     ln "Please insert a DVD and continue by pressing any key."
     pause
-    mountedPath=$(mount | grep $drivePath | cut -d" " -f3)
+    mountedPath=$(mount | grep ${drivePath} | cut -d" " -f3)
     if [[ ! -n ${mountedPath} ]]; then
       ln "Mount point cannot be found."
       br
