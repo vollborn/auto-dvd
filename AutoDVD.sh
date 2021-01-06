@@ -5,7 +5,7 @@ diskAutodetect=true       # can only be used if unmountAfterReading=true
 titleMinlength=300        # 300 seconds = 5 minutes
 
 prefix="[\e[36mAutoDVD\e[0m] "
-workingPath="/home/$(whoami)/.AutoDVD"
+workingPath="$(eval echo "~$(whoami)")/.AutoDVD"
 packages=("coreutils" "makemkv-bin" "makemkv-oss" "util-linux")
 
 if readlink /proc/$$/exe | grep -q "dash"; then
