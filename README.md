@@ -41,7 +41,7 @@ This will automatically unmount the disk drive after copying its contents, so th
 ```
 diskAutodetect=true
 ```
-The will detect new inserted disks once the script copied the previous disk. This is only supported if *unmountAfterReading* is set to *true*.
+This will detect new inserted disks once the script copied the previous disk. If set to *false*, you need to manual confirm that another disk got inserted. This is only supported if *unmountAfterReading* is set to *true*.
 
 #### titleMinlength
 ```
