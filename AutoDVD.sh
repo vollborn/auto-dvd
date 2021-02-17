@@ -6,7 +6,7 @@ titleMinlength=300        # 300 seconds = 5 minutes
 
 prefix="[\e[36mAutoDVD\e[0m] "
 workingPath="$(eval echo "~$(whoami)")/.AutoDVD"
-packages=("coreutils" "makemkv-bin" "makemkv-oss" "util-linux")
+packages=("coreutils" "makemkv-bin" "makemkv-oss" "util-linux" "screen")
 
 if readlink /proc/$$/exe | grep -q "dash"; then
 	echo -e "${prefix}Please run this script with bash."
@@ -151,6 +151,7 @@ function createTemporaryDirectory ()
       error "Temporary directory \"${tmpPath}\" could not be created."
     fi
   fi
+  sudo chown -R ${owner} ${tmpPath} &> /dev/null
 }
 
 function checkUnmountAfterReading ()
@@ -330,15 +331,36 @@ while true; do
     br
   fi
 
+  logFile="${tmpPath}/${driveName}.log"
+  screenName="auto-dvd-${driveName}"
+
   ln "Reading DVD..."
   ln "This may take a while."
   br
-  sudo makemkvcon --minlength=${titleMinlength} mkv dev:${drivePath} all ${tmpPath}
+  screen -dmS ${screenName} bash -c "makemkvcon --messages=${logFile} --minlength=${titleMinlength} mkv dev:${drivePath} all ${tmpPath}" &> /dev/null
+  sleep 2s
+
+  while true; do
+    clear
+    banner
+    ln "Temporary directory content:"
+    br
+    ls -lh ${tmpPath}
+    br
+    ln "Console output:"
+    br
+    tail -n 15 ${logFile}
+
+    if [[ ! -n $(screen -ls | grep "${screenName}") ]]; then
+      break
+    fi
+    sleep 2s
+  done
   br
 
   ln "Moving created file..."
   largestFile=$(find ${tmpPath} -maxdepth 1 -printf '%s %p\n' | sort -nr | head -n 1 | cut -d" " -f2-) # Assuming the largest title is the actual movie
-  if [[ "${largestFile}" == "${tmpPath}" ]]; then
+  if [[ "${largestFile}" == "${tmpPath}" || "${largestFile}" == "${logFile}" ]]; then
     error "Title file could not be found"
   fi
   sudo mv "${largestFile}" "${destination}"
