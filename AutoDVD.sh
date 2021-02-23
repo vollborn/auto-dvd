@@ -259,7 +259,7 @@ function performDiskAutodetect ()
   ln "Please insert a new disk."
   while [[ ! -n ${mountedPath} ]]; do
     mountedMatch=$(findmnt -S "${drivePath}" | grep "${drivePath}")
-    mountedPath=${mountedMatch%% ${mountedMatch}*}
+    mountedPath=${mountedMatch%% ${drivePath}*}
     printf "."
     sleep 1s
   done
