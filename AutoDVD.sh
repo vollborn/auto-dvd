@@ -258,7 +258,8 @@ function performDiskAutodetect ()
   br
   ln "Please insert a new disk."
   while [[ ! -n ${mountedPath} ]]; do
-    mountedPath=$(mount | grep ${drivePath} | cut -d" " -f3)
+    mountedMatch=$(findmnt -S "${drivePath}" | grep "${drivePath}")
+    mountedPath=${mountedMatch%% ${mountedMatch}*}
     printf "."
     sleep 1s
   done
@@ -316,12 +317,12 @@ while true; do
     performWaitForDisk
   fi
   
-  mountedBasename=$(basename ${mountedPath})
+  mountedBasename=$(basename "${mountedPath}")
 
   ln "Disk ${counter}: ${mountedPath}"
   ln "Please specify the name of this DVD."
-  prompt ${mountedBasename}
-  diskName=$(readPrompt ${mountedBasename})
+  prompt "${mountedBasename}"
+  diskName=$(readPrompt "${mountedBasename}")
 
   destination="${destinationPath}/${diskName}.mkv"
   if [[ -f $destination ]]; then
